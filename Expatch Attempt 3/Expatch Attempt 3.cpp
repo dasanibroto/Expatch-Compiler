@@ -288,9 +288,6 @@ int main(int argc, char* argv[])
 	fclose(file);
 	FILE *fpw;
 	fpw = fopen(strcat(CRC, ".expatch"), "w");
-	strcpy(lookup, "gicc");
-	getvar(lookup);
-	if (s) printf("betty's id is %s\n", varval);
 	for (int x = 0; x < (sizeof write_arr / sizeof write_arr[0]); ++x) {
 		memcpy(working_str, &write_arr[x][0], 256);
 		fputs(working_str, fpw);
