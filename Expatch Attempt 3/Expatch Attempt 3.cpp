@@ -4,21 +4,22 @@
 #include <signal.h>
 #include <stdlib.h>
 #include "uthash.h"
+#include <leveldb.h>
 
 struct dictionary {
-	char variable[256];            /* we'll use this field as the key */
+	char variable[256][256];        /* we'll use this field as the key */
 	char value[256];
 	UT_hash_handle hh; /* makes this structure hashable */
 };
 
 struct dictionary *variables;
 
-void add_var(char variable, char *value) {
+void add_var(char* variable, char *value) {
 	struct dictionary *s;
 	HASH_FIND_INT(variables, &variable, s);  /* id already in the hash? */
 	if (s == NULL) {
 		s = (struct dictionary *)malloc(sizeof *s);
-		*s->value = variable;
+		*s->variable = variable;
 		HASH_ADD_INT(variables, variable, s);
 	}
 	strcpy(s->value, value);
@@ -26,7 +27,7 @@ void add_var(char variable, char *value) {
 
 
 
-struct dictionary *find_var(int variable) {
+struct dictionary *find_var(char* variable) {
 	struct dictionary *s;
 	HASH_FIND_INT(variables, &variable, s);
 	return s;
@@ -74,6 +75,12 @@ void getwriteadd() {
 void getwriteval() {
 	memcpy(value, &nullarr[0], 256);
 	memcpy(value, &linecopy[strcspn(linecopy,comma)], strlen(linecopy)- strcspn(linecopy, comma));
+}
+
+void getvarval() {
+	memcpy(value, &nullarr[0], 256);
+	memcpy(value, &linecopy[strcspn(linecopy, operand)+1], strlen(linecopy) - strcspn(linecopy, operand)-1);
+	strtok(value, "\n");
 }
 
 void write8bit(char *address, char *value) {
@@ -163,7 +170,8 @@ int main(int argc, char* argv[])
 				strtok(CRC, "\n");
 			}
 			else {
-				memcpy(working_str, &linecopy[operand_pos], sizeof(&linecopy) - operand_pos);
+				getvarval();
+				add_var(subbuff, value);
 			}
 		}
 		else if (strcmp(operand, "(") == 0) {
