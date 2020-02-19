@@ -360,14 +360,34 @@ void writetimer(char *time) {
 	has_written = 1;
 }
 
-void writeif(char *address, char *operation, char *value) {
+void writeif(char *address, char *operation, char *value, int position) {
 	memcpy(written, &nullarr[0], 256);
 	has_written = 1;
-	write_pos++;
 }
 
-void writeifaddr(char *address, char *operation, char *address2) {
+void writeifaddr(char *address, char *operation, char *address2, int position) {
 	memcpy(written, &nullarr[0], 256);
+	has_written = 1;
+}
+
+void writeif1(char *address, char *operation, char *value) {
+	memcpy(written, &nullarr[0], 256);
+	strcat(written, "patch=1,EE,D");
+	strcat(written, address);
+	strcat(written, ",extended,00");
+	if (strcmp(operation, "==")==0) {
+		strcat(written, "00");
+	}
+	else if (strcmp(operation, "!=") == 0) {
+		strcat(written, "10");
+	}
+	else if (strcmp(operation, "<") == 0) {
+		strcat(written, "20");
+	}
+	else if (strcmp(operation, ">") == 0) {
+		strcat(written, "30");
+	}
+	addzero(value, 4);
 	has_written = 1;
 	write_pos++;
 }
@@ -393,22 +413,30 @@ void writebracket() {
 	case 1:
 		strcpy(linecopy, ifline1);
 		get3str();
-		writeif(address, str1, value);
+		writeif(address, str1, value, ifpos1);
+		line_count2 = 9999;
+		ifcounting1 = 0;
 		break;
 	case 2:
 		strcpy(linecopy, ifline2);
 		get3str();
-		writeif(address, str1, value);
+		writeif(address, str1, value, ifpos2);
+		line_count3 = 9999;
+		ifcounting2 = 0;
 		break;
 	case 3:
 		strcpy(linecopy, ifaddrline2);
 		get3str();
-		writeifaddr(address, str1, value);
+		writeifaddr(address, str1, value, ifaddrpos1);
+		line_count4 = 9999;
+		ifaddrcounting1 = 0;
 		break;
 	case 4:
 		strcpy(linecopy, ifaddrline2);
 		get3str();
-		writeifaddr(address, str1, value);
+		writeifaddr(address, str1, value, ifaddrpos2);
+		line_count5 = 9999;
+		ifaddrcounting2 = 0;
 		break;
 	}
 }
@@ -469,12 +497,28 @@ void checkwrite() {
 		write_pos++;
 	}
 	else if (strcmp(subbuff, "ifaddr") == 0) {
-
+		if (ifaddrcounting1 == 0) {
+			memcpy(ifaddrline1, &nullarr[0], 256);
+			strcpy(ifaddrline1, linecopy);
+			line_count4 = 0;
+			ifaddrpos1 = write_pos;
+			ifaddrcounting1 = 1;
+			write_pos+=2;
+		}
+		else {
+			memcpy(ifaddrline2, &nullarr[0], 256);
+			strcpy(ifaddrline2, linecopy);
+			line_count5 = 0;
+			ifaddrpos2 = write_pos;
+			ifaddrcounting2 = 1;
+			write_pos+=2;
+		}
 	}
-	else if (strcmp(subbuff, "ifaddrtoval") == 0) {
-		write_pos++;
+	else if (strcmp(subbuff, "if1") == 0) {
+		get3str();
+		writeif1(address, str1, value);
 	}
-	else if (strcmp(subbuff, "ifsaddrtoval") == 0) {
+	else if (strcmp(subbuff, "if") == 0) {
 		if (ifcounting1 == 0) {
 			memcpy(ifline1, &nullarr[0], 256);
 			strcpy(ifline1, linecopy);
