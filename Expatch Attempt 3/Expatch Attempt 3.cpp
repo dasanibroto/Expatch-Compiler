@@ -35,6 +35,7 @@ char value[256];
 int operand_pos;
 char written[256] = { '\0' };
 int has_written = 0;
+int sign = 0;
 
 void addvar(char *name) {
 	s = (struct dictionary *)malloc(sizeof *s);
@@ -91,6 +92,21 @@ void getvarval() {
 	strtok(value, "\n");
 }
 
+void checkvalsign(char* value) {
+	memcpy(working_str, &nullarr[0], 256);
+	memcpy(working_str, &value[0], 1);
+	if (strcmp(working_str, "-") == 0) {
+		sign = 1;
+		memcpy(working_str, &nullarr[0], 256);
+		memcpy(working_str, &value[1], strlen(value) - 1);
+		memcpy(value, &nullarr[0], 256);
+		memcpy(value, &working_str[0], 256);
+	}
+	else {
+		sign = 0;
+	}
+}
+
 void write8bit(char *address, char *value) {
 	strcat(written, "patch=1,EE,0");
 	strcat(written, address);
@@ -124,6 +140,68 @@ void write32bit(char *address, char *value) {
 	write_pos++;
 }
 
+void change8bit(char *address, char *value) {
+	checkvalsign(value);
+	switch (sign) {
+	case 0:
+		strcat(written, "patch=1,EE,300000");
+		break;
+	case 1:
+		strcat(written, "patch=1,EE,301000");
+		break;
+	}
+	strcat(written, value);
+	strcat(written, ",extended,0");
+	strcat(written, address);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void change16bit(char *address, char *value) {
+	checkvalsign(value);
+	switch (sign) {
+	case 0:
+		strcat(written, "patch=1,EE,3020");
+		break;
+	case 1:
+		strcat(written, "patch=1,EE,3030");
+		break;
+	}
+	strcat(written, value);
+	strcat(written, ",extended,0");
+	strcat(written, address);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void change32bit(char *address, char *value) {
+	checkvalsign(value);
+	switch (sign) {
+	case 0:
+		strcat(written, "patch=1,EE,30400000");
+		break;
+	case 1:
+		strcat(written, "patch=1,EE,30500000");
+		break;
+	}
+	strcat(written, ",extended,0");
+	strcat(written, address);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	memcpy(written, &nullarr[0], 256);
+	write_pos++;
+	strcat(written, "patch=1,EE,");
+	strcat(written, value);
+	strcat(written, ",extended,00000000\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
 void checkwrite() {
 	if (strcmp(subbuff, "write8bit") == 0) {
 		getwriteadd();
@@ -139,6 +217,21 @@ void checkwrite() {
 		getwriteadd();
 		getwriteval();
 		write32bit(address, value);
+	}
+	else if (strcmp(subbuff, "change8bit") == 0) {
+		getwriteadd();
+		getwriteval();
+		change8bit(address, value);
+	}
+	else if (strcmp(subbuff, "change16bit") == 0) {
+		getwriteadd();
+		getwriteval();
+		change16bit(address, value);
+	}
+	else if (strcmp(subbuff, "change32bit") == 0) {
+		getwriteadd();
+		getwriteval();
+		change32bit(address, value);
 	}
 }
 
