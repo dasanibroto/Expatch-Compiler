@@ -78,32 +78,46 @@ void remove_spaces(char* s) {
 	} while (*s++ = *d++);
 }
 
-void getwriteadd() {
-	memcpy(address, &nullarr[0], 256);
-	memcpy(address, &linecopy[operand_pos + 1], strcspn(linecopy, comma) - (operand_pos + 1));
-	replacevar(address);
-}
-
-void getwriteval() {
-	memcpy(value, &nullarr[0], 256);
-	strtok(linecopy, "\n");
-	memcpy(value, &linecopy[strcspn(linecopy,comma)+1], strlen(linecopy)- strcspn(linecopy, comma)-2);
-	replacevar(value);
-}
-
 void getvarval() {
 	memcpy(value, &nullarr[0], 256);
 	memcpy(value, &linecopy[strcspn(linecopy, operand)+1], strlen(linecopy) - strcspn(linecopy, operand)-1);
 	strtok(value, "\n");
 }
 
-void getloopstr() {
+void get2str() {
+	memcpy(address, &nullarr[0], 256);
+	memcpy(value, &nullarr[0], 256);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(line, open_brk) - 1);
+	brokenstr = strtok(working_str, comma);
+	memcpy(address, brokenstr, 256);
+	brokenstr = strtok(NULL, comma);
+	memcpy(value, brokenstr, 256);
+	replacevar(address);
+	replacevar(value);
+}
+
+void get3str() {
+	memcpy(address, &nullarr[0], 256);
+	memcpy(str1, &nullarr[0], 256);
+	memcpy(value, &nullarr[0], 256);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(line, open_brk) - 1);
+	brokenstr = strtok(working_str, comma);
+	memcpy(address, brokenstr, 256);
+	brokenstr = strtok(NULL, comma);
+	memcpy(str1, brokenstr, 256);
+	brokenstr = strtok(NULL, comma);
+	memcpy(value, brokenstr, 256);
+	replacevar(address);
+	replacevar(str1);
+	replacevar(value);
+}
+
+void get4str() {
 	memcpy(address, &nullarr[0], 256);
 	memcpy(str1, &nullarr[0], 256);
 	memcpy(str2, &nullarr[0], 256);
 	memcpy(value, &nullarr[0], 256);
 	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk)-strcspn(line,open_brk)-1);
-	memcpy(subbuff, &nullarr[0], 256);
 	brokenstr = strtok(working_str, comma);
 	memcpy(address, brokenstr, 256);
 	brokenstr = strtok(NULL, comma);
@@ -259,33 +273,40 @@ void checkwrite() {
 		write8bit(address, value);
 	}
 	else if (strcmp(subbuff, "write16bit") == 0) {
-		getwriteadd();
-		getwriteval();
+		get2str();
 		write16bit(address, value);
 	}
 	else if (strcmp(subbuff, "write32bit") == 0) {
-		getwriteadd();
-		getwriteval();
+		get2str();
 		write32bit(address, value);
 	}
 	else if (strcmp(subbuff, "change8bit") == 0) {
-		getwriteadd();
-		getwriteval();
+		get2str();
 		change8bit(address, value);
 	}
 	else if (strcmp(subbuff, "change16bit") == 0) {
-		getwriteadd();
-		getwriteval();
+		get2str();
 		change16bit(address, value);
 	}
 	else if (strcmp(subbuff, "change32bit") == 0) {
-		getwriteadd();
-		getwriteval();
+		get2str();
 		change32bit(address, value);
 	}
 	else if (strcmp(subbuff, "loopwrite") == 0) {
-		getloopstr();
+		get4str();
 		loopwrite(address, str1, str2, value);
+	}
+	else if (strcmp(subbuff, "copynbyte") == 0) {
+
+	}
+	else if (strcmp(subbuff, "pointwrite") == 0) {
+
+	}
+	else if (strcmp(subbuff, "logicwrite") == 0) {
+
+	}
+	else if (strcmp(subbuff, "copypoint") == 0) {
+
 	}
 }
 
