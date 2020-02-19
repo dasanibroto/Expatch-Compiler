@@ -4,33 +4,29 @@
 #include <signal.h>
 #include <stdlib.h>
 #include "uthash.h"
-#include <leveldb.h>
 
 struct dictionary {
-	char variable[256][256];        /* we'll use this field as the key */
-	char value[256];
-	UT_hash_handle hh; /* makes this structure hashable */
+	char varname[16];             /* key (string is WITHIN the structure) */
+	int varstore;
+	UT_hash_handle hh;         /* makes this structure hashable */
 };
 
-struct dictionary *variables;
+struct dictionary *s, *tmp, *variables = NULL;
+int var_store_len = 0;
+char varval[256] = { '\0' };
+char var_arr[256][256] = { '\0' };
+char lookup[256] = { '\0' };
 
-void add_var(char* variable, char *value) {
-	struct dictionary *s;
-	HASH_FIND_INT(variables, &variable, s);  /* id already in the hash? */
-	if (s == NULL) {
-		s = (struct dictionary *)malloc(sizeof *s);
-		*s->variable = variable;
-		HASH_ADD_INT(variables, variable, s);
-	}
-	strcpy(s->value, value);
+void addvar(char *name) {
+	s = (struct dictionary *)malloc(sizeof *s);
+	strcpy(s->varname, name);
+	s->varstore = var_store_len;
+	HASH_ADD_STR(variables, varname, s);
 }
 
-
-
-struct dictionary *find_var(char* variable) {
-	struct dictionary *s;
-	HASH_FIND_INT(variables, &variable, s);
-	return s;
+void getvar(char *name) {
+	HASH_FIND_STR(variables, name, s);
+	memcpy(varval, &var_arr[s->varstore], 256);
 }
 
 void remove_spaces(char* s) {
@@ -66,6 +62,7 @@ char value[256];
 int operand_pos;
 char written[256] = { '\0' };
 int has_written = 0;
+
 
 void getwriteadd() {
 	memcpy(address, &nullarr[0], 256);
@@ -171,7 +168,9 @@ int main(int argc, char* argv[])
 			}
 			else {
 				getvarval();
-				add_var(subbuff, value);
+				addvar(subbuff);
+				strcpy(var_arr[var_store_len], value);
+				var_store_len++;
 			}
 		}
 		else if (strcmp(operand, "(") == 0) {
@@ -185,6 +184,9 @@ int main(int argc, char* argv[])
 	fclose(file);
 	FILE *fpw;
 	fpw = fopen(strcat(CRC, ".expatch"), "w");
+	strcpy(lookup, "gicc");
+	getvar(lookup);
+	if (s) printf("betty's id is %s\n", varval);
 	for (int x = 0; x < (sizeof write_arr / sizeof write_arr[0]); ++x) {
 		memcpy(working_str, &write_arr[x][0], 256);
 		fputs(working_str, fpw);
