@@ -1,4 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
+#define _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_SECURE_NO_DEPRECATE
+
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
@@ -42,6 +45,26 @@ char written[256] = { '\0' };
 int has_written = 0;
 int sign = 0;
 int comment = 0;
+int line_count1 = 9999;
+int line_count2 = 9999;
+int line_count3 = 9999;
+int line_count4 = 9999;
+int line_count5 = 9999;
+int ifpos1 = 0;
+int ifpos2 = 0;
+int ifaddrpos1 = 0;
+int ifaddrpos2 = 0;
+int timerpos = 0;
+int ifcounting1 = 0;
+int ifcounting2 = 0;
+int ifaddrcounting1 = 0;
+int ifaddrcounting2 = 0;
+int timercounting = 0;
+char ifline1[256] = { '\0' };
+char ifline2[256] = { '\0' };
+char ifaddrline1[256] = { '\0' };
+char ifaddrline2[256] = { '\0' };
+char timerline[256] = { '\0' };
 
 void addvar(char *name) {
 	s = (struct dictionary *)malloc(sizeof *s);
@@ -63,15 +86,48 @@ void replacevar(char *name) {
 	}
 }
 
+void incrementcounters() {
+	if (timercounting == 1) {
+		line_count1++;
+	}
+	else {
+		line_count1 = 9999;
+	}
+	if (ifcounting1 == 1) {
+		line_count2++;
+	}
+	else {
+		line_count2 = 9999;
+	}
+	if (ifcounting2 == 1) {
+		line_count3++;
+	}
+	else {
+		line_count3 = 9999;
+	}
+	if (ifaddrcounting1 == 1) {
+		line_count4++;
+	}
+	else {
+		line_count4 = 9999;
+	}
+	if (ifaddrcounting2 == 1) {
+		line_count5++;
+	}
+	else {
+		line_count5 = 9999;
+	}
+}
+
 void remove_spaces(char* s) {
 	const char* d = s;
 	int char_trip = 0;
 	do {
-		if (*d != ' ') {
+		if ((*d != ' ')&&(*d != '	')) {
 			char_trip = 1;
 		}
 		if (char_trip == 0) {
-			while (*d == ' ') {
+			while ((*d == ' ')||(*d == '	')) {
 				++d;
 			}
 		}
@@ -84,10 +140,17 @@ void getvarval() {
 	strtok(value, "\n");
 }
 
+void get1str() {
+	memcpy(value, &nullarr[0], 256);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(linecopy, open_brk) - 1);
+	memcpy(value, working_str, 256);
+	replacevar(value);
+}
+
 void get2str() {
 	memcpy(address, &nullarr[0], 256);
 	memcpy(value, &nullarr[0], 256);
-	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(line, open_brk) - 1);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(linecopy, open_brk) - 1);
 	brokenstr = strtok(working_str, comma);
 	memcpy(address, brokenstr, 256);
 	brokenstr = strtok(NULL, comma);
@@ -100,7 +163,7 @@ void get3str() {
 	memcpy(address, &nullarr[0], 256);
 	memcpy(str1, &nullarr[0], 256);
 	memcpy(value, &nullarr[0], 256);
-	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(line, open_brk) - 1);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(linecopy, open_brk) - 1);
 	brokenstr = strtok(working_str, comma);
 	memcpy(address, brokenstr, 256);
 	brokenstr = strtok(NULL, comma);
@@ -117,7 +180,7 @@ void get4str() {
 	memcpy(str1, &nullarr[0], 256);
 	memcpy(str2, &nullarr[0], 256);
 	memcpy(value, &nullarr[0], 256);
-	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk)-strcspn(line,open_brk)-1);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk)-strcspn(linecopy,open_brk)-1);
 	brokenstr = strtok(working_str, comma);
 	memcpy(address, brokenstr, 256);
 	brokenstr = strtok(NULL, comma);
@@ -130,6 +193,14 @@ void get4str() {
 	replacevar(str1);
 	replacevar(str2);
 	replacevar(value);
+}
+
+void addzero(char *value, int len) {
+	int i = 0;
+	int zeroes = len - strlen(value);
+	for (i = 0; i < zeroes; i++) {
+		strcat(written, "0");
+	}
 }
 
 void checkvalsign(char* value) {
@@ -237,6 +308,9 @@ void change32bit(char *address, char *value) {
 	if (comment == 1) {
 		strcat(written, "//");
 	}
+	else {
+		incrementcounters();
+	}
 	strcat(written, "patch=1,EE,");
 	strcat(written, value);
 	strcat(written, ",extended,00000000\n");
@@ -258,6 +332,9 @@ void loopwrite(char *address, char *b, char *t, char *value) {
 	if (comment == 1) {
 		strcat(written, "//");
 	}
+	else {
+		incrementcounters();
+	}
 	strcat(written, "patch=1,EE,");
 	strcat(written, value);
 	strcat(written, ",extended,00000000\n");
@@ -266,10 +343,79 @@ void loopwrite(char *address, char *b, char *t, char *value) {
 	write_pos++;
 }
 
+void writetimer(char *time) {
+	memcpy(written, &nullarr[0], 256);
+	memcpy(working_str, &nullarr[0], 256);
+	strcat(written, "patch=1,EE,B");
+	itoa(line_count1, working_str, 10);
+	addzero(working_str, 2);
+	strcat(written, working_str);
+	addzero(time, 5);
+	strcat(written, time);
+	strcat(written, ",extended,00000000");
+	strcat(written, "\n");
+	strcpy(write_arr[timerpos], written);
+	line_count1 = 9999;
+	timercounting = 0;
+	has_written = 1;
+}
+
+void writeif(char *address, char *operation, char *value) {
+	memcpy(written, &nullarr[0], 256);
+	has_written = 1;
+	write_pos++;
+}
+
+void writeifaddr(char *address, char *operation, char *address2) {
+	memcpy(written, &nullarr[0], 256);
+	has_written = 1;
+	write_pos++;
+}
+
+void writebracket() {
+	memcpy(linecopy, &nullarr[0], 256);
+	int i;
+	int countpos = 0;
+	int countarray[] = { line_count1, line_count2, line_count3, line_count4, line_count5 };
+	int smallest = countarray[0];
+	for (i = 0; i < 5; ++i) {
+		if (smallest > countarray[i]) {
+			countpos = i;
+			smallest = countarray[i];
+		}
+	}
+	switch (countpos) {
+	case 0:
+		strcpy(linecopy, timerline);
+		get1str();
+		writetimer(value);
+		break;
+	case 1:
+		strcpy(linecopy, ifline1);
+		get3str();
+		writeif(address, str1, value);
+		break;
+	case 2:
+		strcpy(linecopy, ifline2);
+		get3str();
+		writeif(address, str1, value);
+		break;
+	case 3:
+		strcpy(linecopy, ifaddrline2);
+		get3str();
+		writeifaddr(address, str1, value);
+		break;
+	case 4:
+		strcpy(linecopy, ifaddrline2);
+		get3str();
+		writeifaddr(address, str1, value);
+		break;
+	}
+}
+
 void checkwrite() {
 	if (strcmp(subbuff, "write8bit") == 0) {
-		getwriteadd();
-		getwriteval();
+		get2str();
 		write8bit(address, value);
 	}
 	else if (strcmp(subbuff, "write16bit") == 0) {
@@ -305,8 +451,46 @@ void checkwrite() {
 	else if (strcmp(subbuff, "logicwrite") == 0) {
 
 	}
-	else if (strcmp(subbuff, "copypoint") == 0) {
+	else if (strcmp(subbuff, "copyfrompoint") == 0) {
 
+	}
+	else if (strcmp(subbuff, "copyaddr2addr") == 0) {
+
+	}
+	else if (strcmp(subbuff, "copytopoint") == 0) {
+		
+	}
+	else if (strcmp(subbuff, "timeractivate") == 0) {
+		memcpy(timerline, &nullarr[0], 256);
+		strcpy(timerline, linecopy);
+		line_count1 = 0;
+		timerpos = write_pos;
+		timercounting = 1;
+		write_pos++;
+	}
+	else if (strcmp(subbuff, "ifaddr") == 0) {
+
+	}
+	else if (strcmp(subbuff, "ifaddrtoval") == 0) {
+		write_pos++;
+	}
+	else if (strcmp(subbuff, "ifsaddrtoval") == 0) {
+		if (ifcounting1 == 0) {
+			memcpy(ifline1, &nullarr[0], 256);
+			strcpy(ifline1, linecopy);
+			line_count2 = 0;
+			ifpos1 = write_pos;
+			ifcounting1 = 1;
+			write_pos++;
+		}
+		else {
+			memcpy(ifline2, &nullarr[0], 256);
+			strcpy(ifline2, linecopy);
+			line_count3 = 0;
+			ifpos2 = write_pos;
+			ifcounting2 = 1;
+			write_pos++;
+		}
 	}
 }
 
@@ -326,12 +510,18 @@ int main(int argc, char* argv[])
 		memcpy(str2, &nullarr[0], 256);
 		memcpy(linecopy, &line[0], sizeof(line));
 		remove_spaces(linecopy);
+		if (strcmp(&linecopy[0], "}") == 0) {
+			writebracket();
+		}
 		operand_pos = strcspn(linecopy, keys);
 		memcpy(subbuff, &linecopy[0], operand_pos);
 		memcpy(operand, &linecopy[operand_pos], 1);
 		subbuff[operand_pos] = '\0';
 		operand[1] = '\0';
 		memcpy(working_str, &linecopy[0], 2);
+		if (strcmp(working_str, "//") != 0) {
+			incrementcounters();
+		}
 		if (strcmp(working_str, "//") == 0) {
 			memcpy(subbuff, &nullarr[0], 256);
 			memcpy(subbuff, &linecopy[2], operand_pos-2);
