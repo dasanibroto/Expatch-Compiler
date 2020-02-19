@@ -24,9 +24,14 @@ char operand[2] = { '\0' };
 char linecopy[256] = { '\0' };
 char subbuff[256] = { '\0' };
 char working_str[256] = { '\0' };
+char str1[256] = { '\0' };
+char str2[256] = { '\0' };
+char * brokenstr = { '\0' };
 char keys[] = "=(:";
 char comma[] = ",";
 char unwanted[] = " ,*():";
+char open_brk[] = "(";
+char close_brk[] = ")";
 char write_arr[256][256] = { '\0' };
 int error_detect = 0;
 int write_pos = 0;
@@ -36,6 +41,7 @@ int operand_pos;
 char written[256] = { '\0' };
 int has_written = 0;
 int sign = 0;
+int comment = 0;
 
 void addvar(char *name) {
 	s = (struct dictionary *)malloc(sizeof *s);
@@ -73,7 +79,6 @@ void remove_spaces(char* s) {
 }
 
 void getwriteadd() {
-	memcpy(varval, &nullarr[0], 256);
 	memcpy(address, &nullarr[0], 256);
 	memcpy(address, &linecopy[operand_pos + 1], strcspn(linecopy, comma) - (operand_pos + 1));
 	replacevar(address);
@@ -90,6 +95,27 @@ void getvarval() {
 	memcpy(value, &nullarr[0], 256);
 	memcpy(value, &linecopy[strcspn(linecopy, operand)+1], strlen(linecopy) - strcspn(linecopy, operand)-1);
 	strtok(value, "\n");
+}
+
+void getloopstr() {
+	memcpy(address, &nullarr[0], 256);
+	memcpy(str1, &nullarr[0], 256);
+	memcpy(str2, &nullarr[0], 256);
+	memcpy(value, &nullarr[0], 256);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk)-strcspn(line,open_brk)-1);
+	memcpy(subbuff, &nullarr[0], 256);
+	brokenstr = strtok(working_str, comma);
+	memcpy(address, brokenstr, 256);
+	brokenstr = strtok(NULL, comma);
+	memcpy(str1, brokenstr, 256);
+	brokenstr = strtok(NULL, comma);
+	memcpy(str2, brokenstr, 256);
+	brokenstr = strtok(NULL, comma);
+	memcpy(value, brokenstr, 256);
+	replacevar(address);
+	replacevar(str1);
+	replacevar(str2);
+	replacevar(value);
 }
 
 void checkvalsign(char* value) {
@@ -194,6 +220,30 @@ void change32bit(char *address, char *value) {
 	strcpy(write_arr[write_pos], written);
 	memcpy(written, &nullarr[0], 256);
 	write_pos++;
+	if (comment == 1) {
+		strcat(written, "//");
+	}
+	strcat(written, "patch=1,EE,");
+	strcat(written, value);
+	strcat(written, ",extended,00000000\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void loopwrite(char *address, char *b, char *t, char *value) {
+	strcat(written, "patch=1,EE,4");
+	strcat(written, address);
+	strcat(written, ",extended,");
+	strcat(written, b);
+	strcat(written, t);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	memcpy(written, &nullarr[0], 256);
+	write_pos++;
+	if (comment == 1) {
+		strcat(written, "//");
+	}
 	strcat(written, "patch=1,EE,");
 	strcat(written, value);
 	strcat(written, ",extended,00000000\n");
@@ -233,6 +283,10 @@ void checkwrite() {
 		getwriteval();
 		change32bit(address, value);
 	}
+	else if (strcmp(subbuff, "loopwrite") == 0) {
+		getloopstr();
+		loopwrite(address, str1, str2, value);
+	}
 }
 
 int main(int argc, char* argv[])
@@ -243,7 +297,12 @@ int main(int argc, char* argv[])
 
 	while (fgets(line, sizeof(line), file)) {
 		has_written = 0;
+		comment = 0;
 		memcpy(written, &nullarr[0], 256);
+		memcpy(subbuff, &nullarr[0], 256);
+		memcpy(working_str, &nullarr[0], 256);
+		memcpy(str1, &nullarr[0], 256);
+		memcpy(str2, &nullarr[0], 256);
 		memcpy(linecopy, &line[0], sizeof(line));
 		remove_spaces(linecopy);
 		operand_pos = strcspn(linecopy, keys);
@@ -256,6 +315,7 @@ int main(int argc, char* argv[])
 			memcpy(subbuff, &nullarr[0], 256);
 			memcpy(subbuff, &linecopy[2], operand_pos-2);
 			strcat(written, "//");
+			comment = 1;
 			checkwrite();
 			if (has_written == 0) {
 				memcpy(subbuff, &linecopy[2], 254);
