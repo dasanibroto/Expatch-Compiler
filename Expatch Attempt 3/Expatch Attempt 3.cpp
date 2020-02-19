@@ -71,19 +71,9 @@ void getwriteadd() {
 	memcpy(address, &linecopy[operand_pos + 1], strcspn(linecopy, comma) - (operand_pos + 1));
 }
 
-void get8bitval() {
+void getwriteval() {
 	memcpy(value, &nullarr[0], 256);
-	memcpy(value, &linecopy[operand_pos + 9], 2);
-}
-
-void get16bitval() {
-	memcpy(value, &nullarr[0], 256);
-	memcpy(value, &linecopy[operand_pos + 9], 4);
-}
-
-void get32bitval() {
-	memcpy(value, &nullarr[0], 256);
-	memcpy(value, &linecopy[operand_pos + 9], 8);
+	memcpy(value, &linecopy[strcspn(linecopy,comma)], strlen(linecopy)- strcspn(linecopy, comma));
 }
 
 void write8bit(char *address, char *value) {
@@ -122,17 +112,17 @@ void write32bit(char *address, char *value) {
 void checkwrite() {
 	if (strcmp(subbuff, "write8bit") == 0) {
 		getwriteadd();
-		get8bitval();
+		getwriteval();
 		write8bit(address, value);
 	}
 	else if (strcmp(subbuff, "write16bit") == 0) {
 		getwriteadd();
-		get16bitval();
+		getwriteval();
 		write16bit(address, value);
 	}
 	else if (strcmp(subbuff, "write32bit") == 0) {
 		getwriteadd();
-		get32bitval();
+		getwriteval();
 		write32bit(address, value);
 	}
 }
