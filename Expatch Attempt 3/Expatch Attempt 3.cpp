@@ -16,34 +16,7 @@ int var_store_len = 0;
 char varval[256] = { '\0' };
 char var_arr[256][256] = { '\0' };
 char lookup[256] = { '\0' };
-
-void addvar(char *name) {
-	s = (struct dictionary *)malloc(sizeof *s);
-	strcpy(s->varname, name);
-	s->varstore = var_store_len;
-	HASH_ADD_STR(variables, varname, s);
-}
-
-void getvar(char *name) {
-	HASH_FIND_STR(variables, name, s);
-	memcpy(varval, &var_arr[s->varstore], 256);
-}
-
-void remove_spaces(char* s) {
-	const char* d = s;
-	int char_trip = 0;
-	do {
-		if (*d != ' ') {
-			char_trip = 1;
-		}
-		if (char_trip == 0) {
-			while (*d == ' ') {
-				++d;
-			}
-		}
-	} while (*s++ = *d++);
-}
-
+char value_store[256] = { '\0' };
 char nullarr[256] = { '\0' };
 char line[256] = { '\0' };
 char CRC[256] = { '\0' };
@@ -63,15 +36,53 @@ int operand_pos;
 char written[256] = { '\0' };
 int has_written = 0;
 
+void addvar(char *name) {
+	s = (struct dictionary *)malloc(sizeof *s);
+	strcpy(s->varname, name);
+	s->varstore = var_store_len;
+	HASH_ADD_STR(variables, varname, s);
+}
+
+void getvar(char *name) {
+	HASH_FIND_STR(variables, name, s);
+	if (s) memcpy(varval, &var_arr[s->varstore], 256);
+}
+
+void replacevar(char *name) {
+	memcpy(varval, &nullarr[0], 256);
+	getvar(name);
+	if (strcmp(varval, nullarr) != 0) {
+		memcpy(name, &varval[0], 256);
+	}
+}
+
+void remove_spaces(char* s) {
+	const char* d = s;
+	int char_trip = 0;
+	do {
+		if (*d != ' ') {
+			char_trip = 1;
+		}
+		if (char_trip == 0) {
+			while (*d == ' ') {
+				++d;
+			}
+		}
+	} while (*s++ = *d++);
+}
 
 void getwriteadd() {
+	memcpy(varval, &nullarr[0], 256);
 	memcpy(address, &nullarr[0], 256);
 	memcpy(address, &linecopy[operand_pos + 1], strcspn(linecopy, comma) - (operand_pos + 1));
+	replacevar(address);
 }
 
 void getwriteval() {
 	memcpy(value, &nullarr[0], 256);
-	memcpy(value, &linecopy[strcspn(linecopy,comma)], strlen(linecopy)- strcspn(linecopy, comma));
+	strtok(linecopy, "\n");
+	memcpy(value, &linecopy[strcspn(linecopy,comma)+1], strlen(linecopy)- strcspn(linecopy, comma)-2);
+	replacevar(value);
 }
 
 void getvarval() {
@@ -133,8 +144,8 @@ void checkwrite() {
 
 int main(int argc, char* argv[])
 {
-	char const* const fileName = argv[1]; /* should check that argc > 1 */
-	FILE* file = fopen(fileName, "r"); /* should check the result */
+	char const* const fileName = argv[1];
+	FILE* file = fopen(fileName, "r");
 
 
 	while (fgets(line, sizeof(line), file)) {
