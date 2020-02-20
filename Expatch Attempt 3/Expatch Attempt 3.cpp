@@ -360,13 +360,78 @@ void writetimer(char *time) {
 	has_written = 1;
 }
 
-void writeif(char *address, char *operation, char *value, int position) {
+void writeif(char *address, char *operation, char *bitdepth, char *value, int position, int linecount) {
 	memcpy(written, &nullarr[0], 256);
+	memcpy(working_str, &nullarr[0], 256);
+	strcat(written, "patch=1,EE,E");
+	if (strcmp(bitdepth, "16") == 0) {
+		strcat(written, "0");
+	}
+	else if (strcmp(bitdepth, "8") == 0) {
+		strcat(written, "1");
+	}
+	itoa(linecount, working_str, 10);
+	addzero(working_str, 2);
+	strcat(written, working_str);
+	addzero(value, 4);
+	strcat(written, value);
+	strcat(written, ",extended,");
+	if (strcmp(operation, "==") == 0) {
+		strcat(written, "0");
+	}
+	else if (strcmp(operation, "!=") == 0) {
+		strcat(written, "1");
+	}
+	else if (strcmp(operation, "<") == 0) {
+		strcat(written, "2");
+	}
+	else if (strcmp(operation, ">") == 0) {
+		strcat(written, "3");
+	}
+	strcat(written, address);
+	strcpy(write_arr[position], written);
 	has_written = 1;
 }
 
-void writeifaddr(char *address, char *operation, char *address2, int position) {
+void writeifaddr(char *address, char *operation, char *bitdepth, char *address2, int position, int linecount) {
 	memcpy(written, &nullarr[0], 256);
+	memcpy(working_str, &nullarr[0], 256);
+	strcat(written, "patch=1,EE,C");
+	strcat(written, address);
+	strcat(written, ",extended,00000000");
+	strcat(written, "\n");
+	strcpy(write_arr[position], written);
+	position++;
+	memcpy(written, &nullarr[0], 256);
+	strcat(written, "patch=1,EE,0");
+	strcat(written, address2);
+	strcat(written, ",extended,");
+	if (strcmp(bitdepth, "32") == 0) {
+		strcat(written, "0");
+	}
+	else if (strcmp(bitdepth, "16") == 0) {
+		strcat(written, "1");
+	}
+	else if (strcmp(bitdepth, "8") == 0) {
+		strcat(written, "2");
+	}
+	if (strcmp(operation, "==") == 0) {
+		strcat(written, "00");
+	}
+	else if (strcmp(operation, "!=") == 0) {
+		strcat(written, "10");
+	}
+	else if (strcmp(operation, "<") == 0) {
+		strcat(written, "20");
+	}
+	else if (strcmp(operation, ">") == 0) {
+		strcat(written, "30");
+	}
+	itoa(linecount, working_str, 10);
+	addzero(working_str, 5);
+	strcat(written, working_str);
+	strcat(written, "\n");
+	strcpy(write_arr[position], written);
 	has_written = 1;
 }
 
@@ -412,29 +477,29 @@ void writebracket() {
 		break;
 	case 1:
 		strcpy(linecopy, ifline1);
-		get3str();
-		writeif(address, str1, value, ifpos1);
+		get4str();
+		writeif(address, str1, str2, value, ifpos1, line_count2);
 		line_count2 = 9999;
 		ifcounting1 = 0;
 		break;
 	case 2:
 		strcpy(linecopy, ifline2);
-		get3str();
-		writeif(address, str1, value, ifpos2);
+		get4str();
+		writeif(address, str1, str2, value, ifpos2, line_count3);
 		line_count3 = 9999;
 		ifcounting2 = 0;
 		break;
 	case 3:
-		strcpy(linecopy, ifaddrline2);
-		get3str();
-		writeifaddr(address, str1, value, ifaddrpos1);
+		strcpy(linecopy, ifaddrline1);
+		get4str();
+		writeifaddr(address, str1, str2, value, ifaddrpos1, line_count4);
 		line_count4 = 9999;
 		ifaddrcounting1 = 0;
 		break;
 	case 4:
 		strcpy(linecopy, ifaddrline2);
-		get3str();
-		writeifaddr(address, str1, value, ifaddrpos2);
+		get4str();
+		writeifaddr(address, str1, str2, value, ifaddrpos2, line_count5);
 		line_count5 = 9999;
 		ifaddrcounting2 = 0;
 		break;
