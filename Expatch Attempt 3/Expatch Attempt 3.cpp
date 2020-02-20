@@ -343,6 +343,150 @@ void loopwrite(char *address, char *b, char *t, char *value) {
 	write_pos++;
 }
 
+void writencopy(char *fromaddress, char *bytes, char *toaddress) {
+	strcat(written, "patch=1,EE,5");
+	strcat(written, fromaddress);
+	strcat(written, ",extended,");
+	addzero(bytes, 8);
+	strcat(written, bytes);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	memcpy(written, &nullarr[0], 256);
+	write_pos++;
+	if (comment == 1) {
+		strcat(written, "//");
+	}
+	else {
+		incrementcounters();
+	}
+	strcat(written, "patch=1,EE,0");
+	strcat(written, toaddress);
+	strcat(written, ",extended,00000000\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void writetopoint(char *A, char *O, char *bitdepth, char *value) {
+	strcat(written, "patch=1,EE,6");
+	strcat(written, A);
+	strcat(written, ",extended,");
+	addzero(value, 8);
+	strcat(written, value);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	memcpy(written, &nullarr[0], 256);
+	write_pos++;
+	if (comment == 1) {
+		strcat(written, "//");
+	}
+	else {
+		incrementcounters();
+	}
+	strcat(written, "patch=1,EE,000");
+	if (strcmp(bitdepth, "32") == 0) {
+		strcat(written, "2");
+	}
+	else if (strcmp(bitdepth, "16") == 0) {
+		strcat(written, "1");
+	}
+	else if (strcmp(bitdepth, "8") == 0) {
+		strcat(written, "0");
+	}
+	strcat(written, "0000,extended,");
+	strcat(written, O);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void writelogic(char *address, char *logic, char *value) {
+	strcat(written, "patch=1,EE,7");
+	strcat(written, address);
+	strcat(written, ",extended,000");
+	if (strcmp(logic, "8OR") == 0) {
+		strcat(written, "0");
+	}
+	else if (strcmp(logic, "16OR") == 0) {
+		strcat(written, "1");
+	}
+	else if (strcmp(logic, "8AND") == 0) {
+		strcat(written, "2");
+	}
+	else if (strcmp(logic, "16AND") == 0) {
+		strcat(written, "3");
+	}
+	else if (strcmp(logic, "8XOR") == 0) {
+		strcat(written, "4");
+	}
+	else if (strcmp(logic, "8XOR") == 0) {
+		strcat(written, "5");
+	}
+	addzero(value, 4);
+	strcat(written, value);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void writecopyfrompoint(char *A, char *O, char *toaddress) {
+	strcat(written, "patch=1,EE,8");
+	strcat(written, A);
+	strcat(written, ",extended,");
+	strcat(written, O);
+	strcpy(write_arr[write_pos], written);
+	strcat(written, "\n");
+	memcpy(written, &nullarr[0], 256);
+	write_pos++;
+	if (comment == 1) {
+		strcat(written, "//");
+	}
+	else {
+		incrementcounters();
+	}
+	strcat(written, "patch=1,EE,0");
+	strcat(written, toaddress);
+	strcat(written, ",extended,00000000\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void writecopybetween(char *fromaddress,  char *toaddress) {
+	strcat(written, "patch=1,EE,9");
+	strcat(written, fromaddress);
+	strcat(written, ",extended,0");
+	strcat(written, toaddress);
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
+void writecopytopoint(char *fromaddress, char *P, char *I) {
+	strcat(written, "patch=1,EE,A");
+	strcat(written, fromaddress);
+	strcat(written, ",extended,00000000\n");
+	strcpy(write_arr[write_pos], written);
+	memcpy(written, &nullarr[0], 256);
+	write_pos++;
+	if (comment == 1) {
+		strcat(written, "//");
+	}
+	else {
+		incrementcounters();
+	}
+	strcat(written, "patch=1,EE,0");
+	strcat(written, P);
+	strcat(written, ",extended,0");
+	strcat(written, I);
+	strcpy(write_arr[write_pos], written);
+	has_written = 1;
+	write_pos++;
+}
+
 void writetimer(char *time) {
 	memcpy(written, &nullarr[0], 256);
 	memcpy(working_str, &nullarr[0], 256);
@@ -536,22 +680,28 @@ void checkwrite() {
 		loopwrite(address, str1, str2, value);
 	}
 	else if (strcmp(subbuff, "copynbyte") == 0) {
-
+		get3str();
+		writencopy(address, str1, value);
 	}
 	else if (strcmp(subbuff, "pointwrite") == 0) {
-
+		get4str();
+		writetopoint(address, str1, str2, value);
 	}
 	else if (strcmp(subbuff, "logicwrite") == 0) {
-
+		get3str();
+		writelogic(address, str1, value);
 	}
 	else if (strcmp(subbuff, "copyfrompoint") == 0) {
-
+		get3str();
+		writecopyfrompoint(address, str1, value);
 	}
 	else if (strcmp(subbuff, "copyaddr2addr") == 0) {
-
+		get2str();
+		writecopybetween(address, value);
 	}
 	else if (strcmp(subbuff, "copytopoint") == 0) {
-		
+		get3str();
+		writecopytopoint(address, str1, value);
 	}
 	else if (strcmp(subbuff, "timeractivate") == 0) {
 		memcpy(timerline, &nullarr[0], 256);
