@@ -704,7 +704,7 @@ void checkwrite() {
 		get3str();
 		writecopytopoint(address, str1, value);
 	}
-	else if (strcmp(subbuff, "timeractivate") == 0) {
+	else if (strcmp(subbuff, "timer") == 0) {
 		memcpy(timerline, &nullarr[0], 256);
 		strcpy(timerline, linecopy);
 		line_count1 = 0;
