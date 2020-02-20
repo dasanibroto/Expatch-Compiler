@@ -491,7 +491,7 @@ void writetimer(char *time) {
 	memcpy(written, &nullarr[0], 256);
 	memcpy(working_str, &nullarr[0], 256);
 	strcat(written, "patch=1,EE,B");
-	itoa(line_count1, working_str, 10);
+	itoa(line_count1, working_str, 16);
 	addzero(working_str, 2);
 	strcat(written, working_str);
 	addzero(time, 5);
@@ -514,7 +514,7 @@ void writeif(char *address, char *operation, char *bitdepth, char *value, int po
 	else if (strcmp(bitdepth, "8") == 0) {
 		strcat(written, "1");
 	}
-	itoa(linecount, working_str, 10);
+	itoa(linecount, working_str, 16);
 	addzero(working_str, 2);
 	strcat(written, working_str);
 	addzero(value, 4);
@@ -533,6 +533,7 @@ void writeif(char *address, char *operation, char *bitdepth, char *value, int po
 		strcat(written, "3");
 	}
 	strcat(written, address);
+	strcat(written, "\n");
 	strcpy(write_arr[position], written);
 	has_written = 1;
 }
@@ -571,7 +572,7 @@ void writeifaddr(char *address, char *operation, char *bitdepth, char *address2,
 	else if (strcmp(operation, ">") == 0) {
 		strcat(written, "30");
 	}
-	itoa(linecount, working_str, 10);
+	itoa(linecount, working_str, 16);
 	addzero(working_str, 5);
 	strcat(written, working_str);
 	strcat(written, "\n");
@@ -769,16 +770,15 @@ int main(int argc, char* argv[])
 		memcpy(str2, &nullarr[0], 256);
 		memcpy(linecopy, &line[0], sizeof(line));
 		remove_spaces(linecopy);
-		if (strcmp(&linecopy[0], "}") == 0) {
-			writebracket();
-		}
+		memcpy(str1, &linecopy[0], 1);
+		memcpy(working_str, &nullarr[0], 256);
 		operand_pos = strcspn(linecopy, keys);
 		memcpy(subbuff, &linecopy[0], operand_pos);
 		memcpy(operand, &linecopy[operand_pos], 1);
 		subbuff[operand_pos] = '\0';
 		operand[1] = '\0';
 		memcpy(working_str, &linecopy[0], 2);
-		if (strcmp(working_str, "//") != 0) {
+		if ((strcmp(working_str, "//") != 0) && (strcmp(&str1[0], "}") != 0)) {
 			incrementcounters();
 		}
 		if (strcmp(working_str, "//") == 0) {
@@ -809,6 +809,10 @@ int main(int argc, char* argv[])
 		}
 		else if (strcmp(operand, "(") == 0) {
 			checkwrite();
+		}
+		else if (strcmp(&str1[0], "}") == 0) {
+			memcpy(str1, &nullarr[0], 256);
+			writebracket();
 		}
 		else {
 			strcpy(write_arr[write_pos], "\n");
