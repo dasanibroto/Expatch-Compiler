@@ -220,8 +220,10 @@ void checkvalsign(char* value) {
 
 void write8bit(char *address, char *value) {
 	strcat(written, "patch=1,EE,0");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,000000");
+	addzero(value, 2);
 	strcat(written, value);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -231,8 +233,10 @@ void write8bit(char *address, char *value) {
 
 void write16bit(char *address, char *value) {
 	strcat(written, "patch=1,EE,1");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,0000");
+	addzero(value, 4);
 	strcat(written, value);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -242,8 +246,10 @@ void write16bit(char *address, char *value) {
 
 void write32bit(char *address, char *value) {
 	strcat(written, "patch=1,EE,2");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,");
+	addzero(value, 8);
 	strcat(written, value);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -261,8 +267,10 @@ void change8bit(char *address, char *value) {
 		strcat(written, "patch=1,EE,301000");
 		break;
 	}
+	addzero(value, 2);
 	strcat(written, value);
 	strcat(written, ",extended,0");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -280,8 +288,10 @@ void change16bit(char *address, char *value) {
 		strcat(written, "patch=1,EE,3030");
 		break;
 	}
+	addzero(value, 2);
 	strcat(written, value);
 	strcat(written, ",extended,0");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -300,6 +310,7 @@ void change32bit(char *address, char *value) {
 		break;
 	}
 	strcat(written, ",extended,0");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -321,9 +332,12 @@ void change32bit(char *address, char *value) {
 
 void loopwrite(char *address, char *b, char *t, char *value) {
 	strcat(written, "patch=1,EE,4");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,");
+	addzero(b, 4);
 	strcat(written, b);
+	addzero(t, 4);
 	strcat(written, t);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -336,6 +350,7 @@ void loopwrite(char *address, char *b, char *t, char *value) {
 		incrementcounters();
 	}
 	strcat(written, "patch=1,EE,");
+	addzero(value, 8);
 	strcat(written, value);
 	strcat(written, ",extended,00000000\n");
 	strcpy(write_arr[write_pos], written);
@@ -345,6 +360,7 @@ void loopwrite(char *address, char *b, char *t, char *value) {
 
 void writencopy(char *fromaddress, char *bytes, char *toaddress) {
 	strcat(written, "patch=1,EE,5");
+	addzero(fromaddress, 7);
 	strcat(written, fromaddress);
 	strcat(written, ",extended,");
 	addzero(bytes, 8);
@@ -360,6 +376,7 @@ void writencopy(char *fromaddress, char *bytes, char *toaddress) {
 		incrementcounters();
 	}
 	strcat(written, "patch=1,EE,0");
+	addzero(toaddress, 7);
 	strcat(written, toaddress);
 	strcat(written, ",extended,00000000\n");
 	strcpy(write_arr[write_pos], written);
@@ -369,6 +386,7 @@ void writencopy(char *fromaddress, char *bytes, char *toaddress) {
 
 void writetopoint(char *A, char *O, char *bitdepth, char *value) {
 	strcat(written, "patch=1,EE,6");
+	addzero(A, 7);
 	strcat(written, A);
 	strcat(written, ",extended,");
 	addzero(value, 8);
@@ -394,6 +412,7 @@ void writetopoint(char *A, char *O, char *bitdepth, char *value) {
 		strcat(written, "0");
 	}
 	strcat(written, "0000,extended,");
+	addzero(O, 8);
 	strcat(written, O);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -403,6 +422,7 @@ void writetopoint(char *A, char *O, char *bitdepth, char *value) {
 
 void writelogic(char *address, char *logic, char *value) {
 	strcat(written, "patch=1,EE,7");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,000");
 	if (strcmp(logic, "8OR") == 0) {
@@ -433,8 +453,10 @@ void writelogic(char *address, char *logic, char *value) {
 
 void writecopyfrompoint(char *A, char *O, char *toaddress) {
 	strcat(written, "patch=1,EE,8");
+	addzero(A, 7);
 	strcat(written, A);
 	strcat(written, ",extended,");
+	addzero(O, 8);
 	strcat(written, O);
 	strcpy(write_arr[write_pos], written);
 	strcat(written, "\n");
@@ -447,6 +469,7 @@ void writecopyfrompoint(char *A, char *O, char *toaddress) {
 		incrementcounters();
 	}
 	strcat(written, "patch=1,EE,0");
+	addzero(toaddress, 7);
 	strcat(written, toaddress);
 	strcat(written, ",extended,00000000\n");
 	strcpy(write_arr[write_pos], written);
@@ -456,8 +479,10 @@ void writecopyfrompoint(char *A, char *O, char *toaddress) {
 
 void writecopybetween(char *fromaddress,  char *toaddress) {
 	strcat(written, "patch=1,EE,9");
+	addzero(fromaddress, 7);
 	strcat(written, fromaddress);
 	strcat(written, ",extended,0");
+	addzero(toaddress, 7);
 	strcat(written, toaddress);
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
@@ -467,6 +492,7 @@ void writecopybetween(char *fromaddress,  char *toaddress) {
 
 void writecopytopoint(char *fromaddress, char *P, char *I) {
 	strcat(written, "patch=1,EE,A");
+	addzero(fromaddress, 7);
 	strcat(written, fromaddress);
 	strcat(written, ",extended,00000000\n");
 	strcpy(write_arr[write_pos], written);
@@ -479,8 +505,10 @@ void writecopytopoint(char *fromaddress, char *P, char *I) {
 		incrementcounters();
 	}
 	strcat(written, "patch=1,EE,0");
+	addzero(P, 7);
 	strcat(written, P);
 	strcat(written, ",extended,0");
+	addzero(I, 7);
 	strcat(written, I);
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -532,6 +560,7 @@ void writeif(char *address, char *operation, char *bitdepth, char *value, int po
 	else if (strcmp(operation, ">") == 0) {
 		strcat(written, "3");
 	}
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, "\n");
 	strcpy(write_arr[position], written);
@@ -542,6 +571,7 @@ void writeifaddr(char *address, char *operation, char *bitdepth, char *address2,
 	memcpy(written, &nullarr[0], 256);
 	memcpy(working_str, &nullarr[0], 256);
 	strcat(written, "patch=1,EE,C");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,00000000");
 	strcat(written, "\n");
@@ -549,6 +579,7 @@ void writeifaddr(char *address, char *operation, char *bitdepth, char *address2,
 	position++;
 	memcpy(written, &nullarr[0], 256);
 	strcat(written, "patch=1,EE,0");
+	addzero(address2, 7);
 	strcat(written, address2);
 	strcat(written, ",extended,");
 	if (strcmp(bitdepth, "32") == 0) {
@@ -583,6 +614,7 @@ void writeifaddr(char *address, char *operation, char *bitdepth, char *address2,
 void writeif1(char *address, char *operation, char *value) {
 	memcpy(written, &nullarr[0], 256);
 	strcat(written, "patch=1,EE,D");
+	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,00");
 	if (strcmp(operation, "==")==0) {
