@@ -27,6 +27,7 @@ char operand[2] = { '\0' };
 char linecopy[256] = { '\0' };
 char subbuff[256] = { '\0' };
 char working_str[256] = { '\0' };
+char comment_str[256] = { '\0' };
 char str1[256] = { '\0' };
 char str2[256] = { '\0' };
 char * brokenstr = { '\0' };
@@ -45,6 +46,7 @@ char written[256] = { '\0' };
 int has_written = 0;
 int sign = 0;
 int comment = 0;
+int comment_embed = 0;
 int line_count1 = 9999;
 int line_count2 = 9999;
 int line_count3 = 9999;
@@ -76,6 +78,24 @@ void addvar(char *name) {
 void getvar(char *name) {
 	HASH_FIND_STR(variables, name, s);
 	if (s) memcpy(varval, &var_arr[s->varstore], 256);
+}
+
+void getcomment() {
+	if ((strcspn(linecopy, "/") != strlen(linecopy)) && (strcspn(linecopy, "/") != 0)) {
+		memcpy(comment_str, &linecopy[strcspn(linecopy, "/")], strlen(linecopy)- strcspn(linecopy, "/"));
+		strtok(comment_str, "\n");
+		comment_embed = 1;
+	}
+	else {
+		comment_embed = 0;
+	}
+}
+
+void writecomment() {
+	if (comment_embed == 1) {
+		strcat(written, "  ");
+		strcat(written, comment_str);
+	}
 }
 
 void replacevar(char *name) {
@@ -225,6 +245,7 @@ void write8bit(char *address, char *value) {
 	strcat(written, ",extended,000000");
 	addzero(value, 2);
 	strcat(written, value);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -238,6 +259,7 @@ void write16bit(char *address, char *value) {
 	strcat(written, ",extended,0000");
 	addzero(value, 4);
 	strcat(written, value);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -251,6 +273,7 @@ void write32bit(char *address, char *value) {
 	strcat(written, ",extended,");
 	addzero(value, 8);
 	strcat(written, value);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -272,6 +295,7 @@ void change8bit(char *address, char *value) {
 	strcat(written, ",extended,0");
 	addzero(address, 7);
 	strcat(written, address);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -293,6 +317,7 @@ void change16bit(char *address, char *value) {
 	strcat(written, ",extended,0");
 	addzero(address, 7);
 	strcat(written, address);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -312,6 +337,7 @@ void change32bit(char *address, char *value) {
 	strcat(written, ",extended,0");
 	addzero(address, 7);
 	strcat(written, address);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	memcpy(written, &nullarr[0], 256);
@@ -339,6 +365,7 @@ void loopwrite(char *address, char *b, char *t, char *value) {
 	strcat(written, b);
 	addzero(t, 4);
 	strcat(written, t);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	memcpy(written, &nullarr[0], 256);
@@ -365,6 +392,7 @@ void writencopy(char *fromaddress, char *bytes, char *toaddress) {
 	strcat(written, ",extended,");
 	addzero(bytes, 8);
 	strcat(written, bytes);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	memcpy(written, &nullarr[0], 256);
@@ -391,6 +419,7 @@ void writetopoint(char *A, char *O, char *bitdepth, char *value) {
 	strcat(written, ",extended,");
 	addzero(value, 8);
 	strcat(written, value);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	memcpy(written, &nullarr[0], 256);
@@ -445,6 +474,7 @@ void writelogic(char *address, char *logic, char *value) {
 	}
 	addzero(value, 4);
 	strcat(written, value);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -458,8 +488,9 @@ void writecopyfrompoint(char *A, char *O, char *toaddress) {
 	strcat(written, ",extended,");
 	addzero(O, 8);
 	strcat(written, O);
-	strcpy(write_arr[write_pos], written);
+	writecomment();
 	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
 	memcpy(written, &nullarr[0], 256);
 	write_pos++;
 	if (comment == 1) {
@@ -484,6 +515,7 @@ void writecopybetween(char *fromaddress,  char *toaddress) {
 	strcat(written, ",extended,0");
 	addzero(toaddress, 7);
 	strcat(written, toaddress);
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	has_written = 1;
@@ -494,7 +526,9 @@ void writecopytopoint(char *fromaddress, char *P, char *I) {
 	strcat(written, "patch=1,EE,A");
 	addzero(fromaddress, 7);
 	strcat(written, fromaddress);
-	strcat(written, ",extended,00000000\n");
+	strcat(written, ",extended,00000000");
+	writecomment();
+	strcat(written, "\n");
 	strcpy(write_arr[write_pos], written);
 	memcpy(written, &nullarr[0], 256);
 	write_pos++;
@@ -525,6 +559,8 @@ void writetimer(char *time) {
 	addzero(time, 5);
 	strcat(written, time);
 	strcat(written, ",extended,00000000");
+	getcomment();
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[timerpos], written);
 	line_count1 = 9999;
@@ -562,6 +598,8 @@ void writeif(char *address, char *operation, char *bitdepth, char *value, int po
 	}
 	addzero(address, 7);
 	strcat(written, address);
+	getcomment();
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[position], written);
 	has_written = 1;
@@ -606,6 +644,8 @@ void writeifaddr(char *address, char *operation, char *bitdepth, char *address2,
 	itoa(linecount, working_str, 16);
 	addzero(working_str, 5);
 	strcat(written, working_str);
+	getcomment();
+	writecomment();
 	strcat(written, "\n");
 	strcpy(write_arr[position], written);
 	has_written = 1;
@@ -630,6 +670,10 @@ void writeif1(char *address, char *operation, char *value) {
 		strcat(written, "30");
 	}
 	addzero(value, 4);
+	strcat(written, value);
+	writecomment();
+	strcat(written, "\n");
+	strcpy(write_arr[write_pos], written);
 	has_written = 1;
 	write_pos++;
 }
@@ -795,6 +839,7 @@ int main(int argc, char* argv[])
 	while (fgets(line, sizeof(line), file)) {
 		has_written = 0;
 		comment = 0;
+		comment_embed = 0;
 		memcpy(written, &nullarr[0], 256);
 		memcpy(subbuff, &nullarr[0], 256);
 		memcpy(working_str, &nullarr[0], 256);
@@ -827,6 +872,7 @@ int main(int argc, char* argv[])
 			}
 		}
 		else if (strcmp(operand, "=") == 0) {
+			getcomment();
 			if (strcmp(subbuff, "CRC") == 0) {
 				memcpy(CRC, &linecopy[operand_pos + 1], sizeof(linecopy) - operand_pos);
 				CRC[sizeof(linecopy) - operand_pos] = '\0';
@@ -840,9 +886,11 @@ int main(int argc, char* argv[])
 			}
 		}
 		else if (strcmp(operand, "(") == 0) {
+			getcomment();
 			checkwrite();
 		}
 		else if (strcmp(&str1[0], "}") == 0) {
+			getcomment();
 			memcpy(str1, &nullarr[0], 256);
 			writebracket();
 		}
