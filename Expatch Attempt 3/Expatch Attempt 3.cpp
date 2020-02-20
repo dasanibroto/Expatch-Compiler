@@ -9,7 +9,7 @@
 #include "uthash.h"
 
 struct dictionary {
-	char varname[16];             /* key (string is WITHIN the structure) */
+	char varname[256];             /* key (string is WITHIN the structure) */
 	int varstore;
 	UT_hash_handle hh;         /* makes this structure hashable */
 };
@@ -17,9 +17,10 @@ struct dictionary {
 struct dictionary *s, *tmp, *variables = NULL;
 int var_store_len = 0;
 char varval[256] = { '\0' };
+char varnam[256] = { '\0' };
+char varnam_arr[256][256] = { '\0' };
 char var_arr[256][256] = { '\0' };
 char lookup[256] = { '\0' };
-char value_store[256] = { '\0' };
 char nullarr[256] = { '\0' };
 char line[256] = { '\0' };
 char CRC[256] = { '\0' };
@@ -36,7 +37,7 @@ char comma[] = ",";
 char unwanted[] = " ,*():";
 char open_brk[] = "(";
 char close_brk[] = ")";
-char write_arr[256][256] = { '\0' };
+char write_arr[16384][256] = { '\0' };
 int error_detect = 0;
 int write_pos = 0;
 char address[256];
@@ -78,6 +79,15 @@ void addvar(char *name) {
 void getvar(char *name) {
 	HASH_FIND_STR(variables, name, s);
 	if (s) memcpy(varval, &var_arr[s->varstore], 256);
+}
+
+void getvarnames() {
+	s = (struct dictionary *)malloc(sizeof *s);
+	int n = 0;
+	HASH_ITER(hh, variables, s, tmp) {
+		strcpy(varnam_arr[n], s->varname);
+		n++;
+	}
 }
 
 void getcomment() {
@@ -835,7 +845,6 @@ int main(int argc, char* argv[])
 	char const* const fileName = argv[1];
 	FILE* file = fopen(fileName, "r");
 
-
 	while (fgets(line, sizeof(line), file)) {
 		has_written = 0;
 		comment = 0;
@@ -900,6 +909,27 @@ int main(int argc, char* argv[])
 		}
 	}
 	fclose(file);
+	getvarnames();
+
+	for (int i = 0; i < HASH_COUNT(variables); i++) {
+		for (int z = (write_pos + i); z >= 0; z--) {
+			memcpy(write_arr[z+1], &write_arr[z][0], 256);
+		}
+		memcpy(written, &nullarr[0], 256);
+		strcat(written, "//" );
+		strcat(written, varnam_arr[var_store_len-i-1]);
+		strcat(written, "=");
+		strcat(written, var_arr[var_store_len-i-1]);
+		strcat(written, "\n");
+		memcpy(write_arr[0], &written[0], 256);
+	}
+	for (int z = (write_pos + var_store_len); z >= 0; z--) {
+		memcpy(write_arr[z + 1], &write_arr[z][0], 256);
+	}
+	memcpy(written, &nullarr[0], 256);
+	strcat(written, "//VARIABLES USED\n");
+	memcpy(write_arr[0], &written[0], 256);
+
 	FILE *fpw;
 	fpw = fopen(strcat(CRC, ".expatch"), "w");
 	for (int x = 0; x < (sizeof write_arr / sizeof write_arr[0]); ++x) {
@@ -907,4 +937,3 @@ int main(int argc, char* argv[])
 		fputs(working_str, fpw);
 	}
 }
-
