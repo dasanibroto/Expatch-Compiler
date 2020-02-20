@@ -92,7 +92,7 @@ void getvarnames() {
 
 void getcomment() {
 	if ((strcspn(linecopy, "/") != strlen(linecopy)) && (strcspn(linecopy, "/") != 0)) {
-		memcpy(comment_str, &linecopy[strcspn(linecopy, "/")], strlen(linecopy)- strcspn(linecopy, "/"));
+		memcpy(comment_str, &linecopy[strcspn(linecopy, "/")], strlen(linecopy) - strcspn(linecopy, "/"));
 		strtok(comment_str, "\n");
 		comment_embed = 1;
 	}
@@ -153,11 +153,11 @@ void remove_spaces(char* s) {
 	const char* d = s;
 	int char_trip = 0;
 	do {
-		if ((*d != ' ')&&(*d != '	')) {
+		if ((*d != ' ') && (*d != '	')) {
 			char_trip = 1;
 		}
 		if (char_trip == 0) {
-			while ((*d == ' ')||(*d == '	')) {
+			while ((*d == ' ') || (*d == '	')) {
 				++d;
 			}
 		}
@@ -166,7 +166,7 @@ void remove_spaces(char* s) {
 
 void getvarval() {
 	memcpy(value, &nullarr[0], 256);
-	memcpy(value, &linecopy[strcspn(linecopy, operand)+1], strlen(linecopy) - strcspn(linecopy, operand)-1);
+	memcpy(value, &linecopy[strcspn(linecopy, operand) + 1], strlen(linecopy) - strcspn(linecopy, operand) - 1);
 	strtok(value, "\n");
 }
 
@@ -210,7 +210,7 @@ void get4str() {
 	memcpy(str1, &nullarr[0], 256);
 	memcpy(str2, &nullarr[0], 256);
 	memcpy(value, &nullarr[0], 256);
-	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk)-strcspn(linecopy,open_brk)-1);
+	memcpy(working_str, &linecopy[strcspn(linecopy, open_brk) + 1], strcspn(linecopy, close_brk) - strcspn(linecopy, open_brk) - 1);
 	brokenstr = strtok(working_str, comma);
 	memcpy(address, brokenstr, 256);
 	brokenstr = strtok(NULL, comma);
@@ -518,7 +518,7 @@ void writecopyfrompoint(char *A, char *O, char *toaddress) {
 	write_pos++;
 }
 
-void writecopybetween(char *fromaddress,  char *toaddress) {
+void writecopybetween(char *fromaddress, char *toaddress) {
 	strcat(written, "patch=1,EE,9");
 	addzero(fromaddress, 7);
 	strcat(written, fromaddress);
@@ -667,7 +667,7 @@ void writeif1(char *address, char *operation, char *value) {
 	addzero(address, 7);
 	strcat(written, address);
 	strcat(written, ",extended,00");
-	if (strcmp(operation, "==")==0) {
+	if (strcmp(operation, "==") == 0) {
 		strcat(written, "00");
 	}
 	else if (strcmp(operation, "!=") == 0) {
@@ -805,7 +805,7 @@ void checkwrite() {
 			line_count4 = 0;
 			ifaddrpos1 = write_pos;
 			ifaddrcounting1 = 1;
-			write_pos+=2;
+			write_pos += 2;
 		}
 		else {
 			memcpy(ifaddrline2, &nullarr[0], 256);
@@ -813,7 +813,7 @@ void checkwrite() {
 			line_count5 = 0;
 			ifaddrpos2 = write_pos;
 			ifaddrcounting2 = 1;
-			write_pos+=2;
+			write_pos += 2;
 		}
 	}
 	else if (strcmp(subbuff, "if1") == 0) {
@@ -869,7 +869,7 @@ int main(int argc, char* argv[])
 		}
 		if (strcmp(working_str, "//") == 0) {
 			memcpy(subbuff, &nullarr[0], 256);
-			memcpy(subbuff, &linecopy[2], operand_pos-2);
+			memcpy(subbuff, &linecopy[2], operand_pos - 2);
 			strcat(written, "//");
 			comment = 1;
 			checkwrite();
@@ -913,13 +913,13 @@ int main(int argc, char* argv[])
 
 	for (int i = 0; i < HASH_COUNT(variables); i++) {
 		for (int z = (write_pos + i); z >= 0; z--) {
-			memcpy(write_arr[z+1], &write_arr[z][0], 256);
+			memcpy(write_arr[z + 1], &write_arr[z][0], 256);
 		}
 		memcpy(written, &nullarr[0], 256);
-		strcat(written, "//" );
-		strcat(written, varnam_arr[var_store_len-i-1]);
+		strcat(written, "//");
+		strcat(written, varnam_arr[var_store_len - i - 1]);
 		strcat(written, "=");
-		strcat(written, var_arr[var_store_len-i-1]);
+		strcat(written, var_arr[var_store_len - i - 1]);
 		strcat(written, "\n");
 		memcpy(write_arr[0], &written[0], 256);
 	}
